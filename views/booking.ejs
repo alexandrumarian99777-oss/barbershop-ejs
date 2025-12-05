@@ -4,8 +4,23 @@
 <section class="section booking-section">
   <div class="container">
     <h1 class="section-title">Book Your Appointment</h1>
-    
-    <% if (errors.length > 0) { %>
+
+    <!-- Success Alert -->
+    <% if (success && success.length > 0) { %>
+      <div class="alert alert-success">
+        <%= success %>
+      </div>
+    <% } %>
+
+    <!-- Flash Error Alert -->
+    <% if (error && error.length > 0) { %>
+      <div class="alert alert-error">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <!-- Validation Errors -->
+    <% if (errors && errors.length > 0) { %>
       <div class="alert alert-error">
         <% errors.forEach(error => { %>
           <p><%= error.msg %></p>
@@ -15,6 +30,7 @@
 
     <form action="/booking" method="POST" class="booking-form">
       <div class="form-grid">
+
         <div class="form-group">
           <label for="customerName">Full Name *</label>
           <input type="text" id="customerName" name="customerName" value="<%= oldInput.customerName || '' %>" required>
@@ -33,14 +49,13 @@
         <div class="form-group">
           <label for="barber">Select Barber *</label>
           <select id="barber" name="barber" required>
-  <option value="">Choose a barber...</option>
-  <% barbers.forEach(barber => { %>
-    <option value="<%= barber._id %>" <%= oldInput.barber == barber._id ? 'selected' : '' %>>
-      <%= barber.name %> - <%= barber.specialty %>
-    </option>
-  <% }); %>
-</select>
-
+            <option value="">Choose a barber...</option>
+            <% barbers.forEach(barber => { %>
+              <option value="<%= barber._id %>" <%= oldInput.barber == barber._id ? 'selected' : '' %>>
+                <%= barber.name %> - <%= barber.specialty %>
+              </option>
+            <% }); %>
+          </select>
         </div>
 
         <div class="form-group">
@@ -58,24 +73,24 @@
 
         <div class="form-group">
           <label for="date">Preferred Date *</label>
-          <input type="date" id="date" name="date" value="<%= oldInput.date || '' %>" min="<%= new Date().toISOString().split('T')[0] %>" required>
+          <input type="date" id="date" name="date" value="<%= oldInput.date || '' %>" 
+                 min="<%= new Date().toISOString().split('T')[0] %>" required>
         </div>
 
         <div class="form-group">
           <label for="time">Preferred Time *</label>
           <select name="time" id="time" required>
-  <option value="">Select time</option>
-  <% 
-    const startHour = 9;
-    const endHour = 20;
-    for (let h = startHour; h <= endHour; h++) {
-      const hour = h.toString().padStart(2, '0');
-  %>
-      <option value="<%= hour %>:00"><%= hour %>:00</option>
-      <option value="<%= hour %>:30"><%= hour %>:30</option>
-  <% } %>
-</select>
-
+            <option value="">Select time</option>
+            <% 
+              const startHour = 9;
+              const endHour = 20;
+              for (let h = startHour; h <= endHour; h++) {
+                const hour = h.toString().padStart(2, '0');
+            %>
+              <option value="<%= hour %>:00"><%= hour %>:00</option>
+              <option value="<%= hour %>:30"><%= hour %>:30</option>
+            <% } %>
+          </select>
         </div>
 
         <div class="form-group full-width">
