@@ -776,3 +776,11 @@ body {
   background: #c71c2b !important;
 }
 
+.btn-edit {
+  background: #2196f3;
+  color: white;
+}
+
+.btn-edit:hover {
+  background: #0b7dda;
+}

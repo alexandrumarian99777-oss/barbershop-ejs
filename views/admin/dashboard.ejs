@@ -94,33 +94,45 @@
       </td>
 
       <td data-label="Actions">
-       <div class="action-buttons">
-  <% if (apt.status === 'pending') { %>
-    <form action="/admin/appointments/<%= apt._id %>/confirm" method="POST" style="display:inline;">
-      <button class="btn-action btn-confirm" title="Confirm">
-        <i class="fas fa-check"></i>
+  <div class="action-buttons">
+
+    <!-- EDIT BUTTON (always visible) -->
+    <form action="/admin/appointments/<%= apt._id %>/edit" method="GET" style="display:inline;">
+      <button class="btn-action btn-edit" title="Edit" style="background:#2196f3;color:white;">
+        <i class="fas fa-edit"></i>
       </button>
     </form>
-  <% } %>
 
-  <% if (apt.status !== 'cancelled') { %>
-    <form action="/admin/appointments/<%= apt._id %>/cancel" method="POST" style="display:inline;">
-      <button class="btn-action btn-cancel" title="Cancel">
-        <i class="fas fa-times"></i>
-      </button>
-    </form>
-  <% } %>
+    <!-- CONFIRM BUTTON -->
+    <% if (apt.status === 'pending') { %>
+      <form action="/admin/appointments/<%= apt._id %>/confirm" method="POST" style="display:inline;">
+        <button class="btn-action btn-confirm" title="Confirm">
+          <i class="fas fa-check"></i>
+        </button>
+      </form>
+    <% } %>
 
-  <% if (apt.status === 'cancelled') { %>
-    <form action="/admin/appointments/<%= apt._id %>/delete" method="POST" style="display:inline;">
-      <button class="btn-action btn-delete" title="Delete Permanently" style="background:#e63946;color:white;">
-        <i class="fas fa-trash"></i>
-      </button>
-    </form>
-  <% } %>
-</div>
+    <!-- CANCEL BUTTON -->
+    <% if (apt.status !== 'cancelled') { %>
+      <form action="/admin/appointments/<%= apt._id %>/cancel" method="POST" style="display:inline;">
+        <button class="btn-action btn-cancel" title="Cancel">
+          <i class="fas fa-times"></i>
+        </button>
+      </form>
+    <% } %>
 
-      </td>
+    <!-- DELETE BUTTON -->
+    <% if (apt.status === 'cancelled') { %>
+      <form action="/admin/appointments/<%= apt._id %>/delete" method="POST" style="display:inline;">
+        <button class="btn-action btn-delete" title="Delete Permanently" style="background:#e63946;color:white;">
+          <i class="fas fa-trash"></i>
+        </button>
+      </form>
+    <% } %>
+
+  </div>
+</td>
+
     </tr>
   <% }); %>
 </tbody>

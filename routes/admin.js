@@ -7,11 +7,14 @@ const Barber = require('../models/Barber');
 const { isAuthenticated } = require('../middleware/auth');
 const { sendAppointmentConfirmation, sendAppointmentCancellation } = require('../utils/mailer');
 
+/* ===========================
+   LOGIN
+=========================== */
+
 // Login Page
 router.get('/login', (req, res) => {
-  if (req.session.adminId) {
-    return res.redirect('/admin/dashboard');
-  }
+  if (req.session.adminId) return res.redirect('/admin/dashboard');
+
   res.render('admin/login', {
     title: 'Admin Login',
     error: req.flash('error')
@@ -21,10 +24,10 @@ router.get('/login', (req, res) => {
 // Login Handler
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-
+  
   try {
     const admin = await Admin.findOne({ email });
-    
+
     if (!admin || !(await admin.comparePassword(password))) {
       req.flash('error', 'Invalid email or password');
       return res.redirect('/admin/login');
@@ -32,6 +35,7 @@ router.post('/login', async (req, res) => {
 
     req.session.adminId = admin._id;
     res.redirect('/admin/dashboard');
+
   } catch (error) {
     console.error(error);
     req.flash('error', 'Login error. Please try again.');
@@ -39,12 +43,17 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Dashboard
+
+/* ===========================
+   DASHBOARD
+=========================== */
+
 router.get('/dashboard', isAuthenticated, async (req, res) => {
   try {
     const appointments = await Appointment.find()
       .populate('barber')
       .sort('-createdAt');
+
     const reviews = await Review.find().sort('-createdAt');
     const barbers = await Barber.find();
 
@@ -64,11 +73,17 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
       success: req.flash('success'),
       error: req.flash('error')
     });
+
   } catch (error) {
     console.error(error);
     res.status(500).send('Server Error');
   }
 });
+
+
+/* ===========================
+   APPOINTMENT ACTIONS
+=========================== */
 
 // Confirm Appointment
 router.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
@@ -83,6 +98,7 @@ router.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
 
     req.flash('success', 'Appointment confirmed and email sent!');
     res.redirect('/admin/dashboard');
+
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error confirming appointment');
@@ -90,8 +106,13 @@ router.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
   }
 });
 
-// Cancel Appointment
-// Cancel Appointment
+
+/*  
+  SINGLE correct Cancel Route 
+  + email 
+  + auto-delete after 5 seconds 
+*/
+
 router.post('/appointments/:id/cancel', isAuthenticated, async (req, res) => {
   try {
     const appointment = await Appointment.findByIdAndUpdate(
@@ -102,52 +123,34 @@ router.post('/appointments/:id/cancel', isAuthenticated, async (req, res) => {
 
     await sendAppointmentCancellation(appointment, appointment.barber);
 
-    req.flash('success', 'Appointment cancelled and email sent!');
-    res.redirect('/admin/dashboard');
-  } catch (error) {
-    console.error(error);
-    req.flash('error', 'Error cancelling appointment');
-    res.redirect('/admin/dashboard');
-  }
-});
-
-// Cancel Appointment (delete after 5 seconds)
-router.post('/appointments/:id/cancel', isAuthenticated, async (req, res) => {
-  try {
-    const appointment = await Appointment.findByIdAndUpdate(
-      req.params.id,
-      { status: 'cancelled' },
-      { new: true }
-    ).populate('barber');
-
-    // Send cancellation email
-    await sendAppointmentCancellation(appointment, appointment.barber);
-
-    // Schedule deletion in 5 seconds
+    // DELAYED DELETE
     setTimeout(async () => {
       try {
         await Appointment.findByIdAndDelete(req.params.id);
-        console.log(`Appointment ${req.params.id} deleted after cancellation`);
-      } catch (deleteErr) {
-        console.error("Delete error:", deleteErr);
+        console.log(`Auto-deleted cancelled appointment ${req.params.id}`);
+      } catch (err) {
+        console.error('Auto-delete error:', err);
       }
     }, 5000);
 
     req.flash('success', 'Appointment cancelled. It will be removed in 5 seconds.');
     res.redirect('/admin/dashboard');
+
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error cancelling appointment');
     res.redirect('/admin/dashboard');
   }
 });
-// Delete Appointment Permanently
+
+
+// Manual Delete
 router.post('/appointments/:id/delete', isAuthenticated, async (req, res) => {
   try {
     await Appointment.findByIdAndDelete(req.params.id);
-
     req.flash('success', 'Appointment deleted permanently.');
     res.redirect('/admin/dashboard');
+
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error deleting appointment');
@@ -156,30 +159,73 @@ router.post('/appointments/:id/delete', isAuthenticated, async (req, res) => {
 });
 
 
-// Update Appointment
-router.post('/appointments/:id/update', isAuthenticated, async (req, res) => {
+/* ===========================
+   EDIT APPOINTMENT
+=========================== */
+
+// GET Edit Page
+router.get('/appointments/:id/edit', isAuthenticated, async (req, res) => {
   try {
-    await Appointment.findByIdAndUpdate(req.params.id, {
-      date: req.body.date,
-      time: req.body.time,
-      notes: req.body.notes
+    const appointment = await Appointment.findById(req.params.id).lean();
+    const barbers = await Barber.find().lean();
+
+    if (!appointment) {
+      req.flash('error', 'Appointment not found');
+      return res.redirect('/admin/dashboard');
+    }
+
+    res.render('admin/edit-appointment', {
+      title: 'Edit Appointment',
+      appointment,
+      barbers,
+      success: req.flash('success'),
+      error: req.flash('error')
     });
 
-    req.flash('success', 'Appointment updated successfully!');
-    res.redirect('/admin/dashboard');
   } catch (error) {
     console.error(error);
-    req.flash('error', 'Error updating appointment');
+    req.flash('error', 'Error loading appointment');
     res.redirect('/admin/dashboard');
   }
 });
 
-// Approve Review
+// POST Save Edit
+router.post('/appointments/:id/edit', isAuthenticated, async (req, res) => {
+  const { customerName, customerEmail, customerPhone, barber, service, date, time, notes } = req.body;
+
+  try {
+    await Appointment.findByIdAndUpdate(req.params.id, {
+      customerName,
+      customerEmail,
+      customerPhone,
+      barber,
+      service,
+      date,
+      time,
+      notes
+    });
+
+    req.flash('success', 'Appointment updated successfully!');
+    res.redirect('/admin/dashboard');
+
+  } catch (error) {
+    console.error(error);
+    req.flash('error', 'Failed to update appointment');
+    res.redirect(`/admin/appointments/${req.params.id}/edit`);
+  }
+});
+
+
+/* ===========================
+   REVIEWS
+=========================== */
+
 router.post('/reviews/:id/approve', isAuthenticated, async (req, res) => {
   try {
     await Review.findByIdAndUpdate(req.params.id, { approved: true });
     req.flash('success', 'Review approved!');
     res.redirect('/admin/dashboard');
+
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error approving review');
@@ -187,12 +233,12 @@ router.post('/reviews/:id/approve', isAuthenticated, async (req, res) => {
   }
 });
 
-// Delete Review
 router.post('/reviews/:id/delete', isAuthenticated, async (req, res) => {
   try {
     await Review.findByIdAndDelete(req.params.id);
     req.flash('success', 'Review deleted!');
     res.redirect('/admin/dashboard');
+
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error deleting review');
@@ -200,7 +246,10 @@ router.post('/reviews/:id/delete', isAuthenticated, async (req, res) => {
   }
 });
 
-// Logout
+
+/* ===========================
+   LOGOUT
+=========================== */
 router.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/admin/login');
