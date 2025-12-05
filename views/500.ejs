@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Error</title>
+    <style>
+        body { font-family: Arial; padding: 40px; }
+        .box { background: #f8f8f8; padding: 20px; border-radius: 8px; }
+        details { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Something went wrong</h1>
+    <p><%= message %></p>
+
+    <% if (stack) { %>
+        <details>
+            <summary>Show stack trace</summary>
+            <pre><%= stack %></pre>
+        </details>
+    <% } %>
+</body>
+</html>

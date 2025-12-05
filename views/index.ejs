@@ -1,0 +1,138 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<!-- Flash Messages -->
+<% if (success && success.length > 0) { %>
+  <div class="alert alert-success"><%= success %></div>
+<% } %>
+<% if (error && error.length > 0) { %>
+  <div class="alert alert-error"><%= error %></div>
+<% } %>
+
+<!-- Hero Section -->
+<section class="hero" id="home">
+  <div class="hero-overlay"></div>
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">Premium Barbershop Experience</h1>
+      <p class="hero-subtitle">Where Style Meets Tradition</p>
+      <a href="/booking" class="btn-hero">Book Your Appointment</a>
+    </div>
+  </div>
+</section>
+
+<!-- Services Section -->
+<section class="section" id="services">
+  <div class="container">
+    <h2 class="section-title">Our Services</h2>
+    <div class="services-grid">
+      <div class="service-card">
+        <i class="fas fa-cut service-icon"></i>
+        <h3>Classic Haircut</h3>
+        <p class="price">$30</p>
+        <p>Traditional scissor cut with consultation</p>
+      </div>
+      <div class="service-card">
+        <i class="fas fa-scissors service-icon"></i>
+        <h3>Beard Trim</h3>
+        <p class="price">$20</p>
+        <p>Professional beard shaping and styling</p>
+      </div>
+      <div class="service-card">
+        <i class="fas fa-spa service-icon"></i>
+        <h3>Hot Towel Shave</h3>
+        <p class="price">$35</p>
+        <p>Luxurious straight razor shave</p>
+      </div>
+      <div class="service-card">
+        <i class="fas fa-user-tie service-icon"></i>
+        <h3>The Works</h3>
+        <p class="price">$65</p>
+        <p>Haircut, beard trim, and hot towel shave</p>
+      </div>
+      <div class="service-card">
+        <i class="fas fa-child service-icon"></i>
+        <h3>Kids Cut</h3>
+        <p class="price">$20</p>
+        <p>Haircut for children under 12</p>
+      </div>
+      <div class="service-card">
+        <i class="fas fa-paint-brush service-icon"></i>
+        <h3>Hair Coloring</h3>
+        <p class="price">$45</p>
+        <p>Professional hair coloring service</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Barbers Section -->
+<section class="section bg-light" id="barbers">
+  <div class="container">
+    <h2 class="section-title">Meet Our Barbers</h2>
+    <div class="barbers-grid">
+      <% barbers.forEach(barber => { %>
+        <div class="barber-card">
+          <img src="<%= barber.image %>" alt="<%= barber.name %>">
+          <div class="barber-info">
+            <h3><%= barber.name %></h3>
+            <p class="specialty"><%= barber.specialty %></p>
+            <p class="experience"><%= barber.experience %> years experience</p>
+            <p class="bio"><%= barber.bio %></p>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</section>
+
+<!-- Reviews Section -->
+<section class="section" id="reviews">
+  <div class="container">
+    <h2 class="section-title">Customer Reviews</h2>
+    <div class="reviews-grid">
+      <% reviews.forEach(review => { %>
+        <div class="review-card">
+          <div class="review-header">
+            <div class="rating">
+              <% for(let i = 0; i < review.rating; i++) { %>
+                <i class="fas fa-star"></i>
+              <% } %>
+            </div>
+          </div>
+          <p class="review-text">"<%= review.comment %>"</p>
+          <p class="review-author">- <%= review.customerName %></p>
+        </div>
+      <% }); %>
+    </div>
+
+    <!-- Add Review Form -->
+    <div class="review-form-section">
+      <h3>Leave a Review</h3>
+      <form action="/reviews" method="POST" class="review-form">
+        <input type="text" name="customerName" placeholder="Your Name" required>
+        
+        <div class="rating-input">
+          <label>Rating:</label>
+          <div class="star-rating">
+            <input type="radio" name="rating" value="5" id="star5" required>
+            <label for="star5"><i class="fas fa-star"></i></label>
+            <input type="radio" name="rating" value="4" id="star4">
+            <label for="star4"><i class="fas fa-star"></i></label>
+            <input type="radio" name="rating" value="3" id="star3">
+            <label for="star3"><i class="fas fa-star"></i></label>
+            <input type="radio" name="rating" value="2" id="star2">
+            <label for="star2"><i class="fas fa-star"></i></label>
+            <input type="radio" name="rating" value="1" id="star1">
+            <label for="star1"><i class="fas fa-star"></i></label>
+          </div>
+        </div>
+
+        <textarea name="comment" placeholder="Your Review" rows="4" required></textarea>
+        <button type="submit" class="btn-primary">Submit Review</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

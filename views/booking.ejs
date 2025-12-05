@@ -1,0 +1,92 @@
+<%- include('partials/header') %>
+<%- include('partials/navbar') %>
+
+<section class="section booking-section">
+  <div class="container">
+    <h1 class="section-title">Book Your Appointment</h1>
+    
+    <% if (errors.length > 0) { %>
+      <div class="alert alert-error">
+        <% errors.forEach(error => { %>
+          <p><%= error.msg %></p>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <form action="/booking" method="POST" class="booking-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="customerName">Full Name *</label>
+          <input type="text" id="customerName" name="customerName" value="<%= oldInput.customerName || '' %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="customerEmail">Email *</label>
+          <input type="email" id="customerEmail" name="customerEmail" value="<%= oldInput.customerEmail || '' %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="customerPhone">Phone *</label>
+          <input type="tel" id="customerPhone" name="customerPhone" value="<%= oldInput.customerPhone || '' %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="barber">Select Barber *</label>
+          <select id="barber" name="barber" required>
+  <option value="">Choose a barber...</option>
+  <% barbers.forEach(barber => { %>
+    <option value="<%= barber._id %>" <%= oldInput.barber == barber._id ? 'selected' : '' %>>
+      <%= barber.name %> - <%= barber.specialty %>
+    </option>
+  <% }); %>
+</select>
+
+        </div>
+
+        <div class="form-group">
+          <label for="service">Service *</label>
+          <select id="service" name="service" required>
+            <option value="">Choose a service...</option>
+            <option value="Classic Haircut - $30">Classic Haircut - $30</option>
+            <option value="Beard Trim - $20">Beard Trim - $20</option>
+            <option value="Hot Towel Shave - $35">Hot Towel Shave - $35</option>
+            <option value="The Works - $65">The Works - $65</option>
+            <option value="Kids Cut - $20">Kids Cut - $20</option>
+            <option value="Hair Coloring - $45">Hair Coloring - $45</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="date">Preferred Date *</label>
+          <input type="date" id="date" name="date" value="<%= oldInput.date || '' %>" min="<%= new Date().toISOString().split('T')[0] %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="time">Preferred Time *</label>
+          <select name="time" id="time" required>
+  <option value="">Select time</option>
+  <% 
+    const startHour = 9;
+    const endHour = 20;
+    for (let h = startHour; h <= endHour; h++) {
+      const hour = h.toString().padStart(2, '0');
+  %>
+      <option value="<%= hour %>:00"><%= hour %>:00</option>
+      <option value="<%= hour %>:30"><%= hour %>:30</option>
+  <% } %>
+</select>
+
+        </div>
+
+        <div class="form-group full-width">
+          <label for="notes">Additional Notes</label>
+          <textarea id="notes" name="notes" rows="3"><%= oldInput.notes || '' %></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary btn-large">Book Appointment</button>
+    </form>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

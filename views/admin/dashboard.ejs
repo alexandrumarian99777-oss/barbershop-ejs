@@ -1,0 +1,184 @@
+<%- include('../partials/header') %>
+
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <h2><i class="fas fa-cut"></i> Classic Cuts</h2>
+      <p>Admin Dashboard</p>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#appointments" class="active"><i class="fas fa-calendar"></i> Appointments</a>
+      <a href="#reviews"><i class="fas fa-star"></i> Reviews</a>
+      <a href="#barbers"><i class="fas fa-users"></i> Barbers</a>
+      <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </nav>
+  </aside>
+
+  <main class="admin-content">
+    <% if (success && success.length > 0) { %>
+      <div class="alert alert-success"><%= success %></div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+    <div class="admin-mobile-toggle" onclick="toggleAdminSidebar()">
+  ☰ Menu
+</div>
+
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <i class="fas fa-clock"></i>
+        <h3><%= stats.pending %></h3>
+        <p>Pending</p>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-check"></i>
+        <h3><%= stats.confirmed %></h3>
+        <p>Confirmed</p>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-calendar-check"></i>
+        <h3><%= stats.total %></h3>
+        <p>Total Appointments</p>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-star"></i>
+        <h3><%= stats.reviews %></h3>
+        <p>Pending Reviews</p>
+      </div>
+    </div>
+
+    <!-- Appointments Section -->
+    <section id="appointments" class="admin-section">
+      <h2>Appointments</h2>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Contact</th>
+              <th>Barber</th>
+              <th>Service</th>
+              <th>Date & Time</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+         <tbody>
+  <% appointments.forEach(apt => { %>
+    <tr>
+      <td data-label="Customer"><%= apt.customerName %></td>
+
+      <td data-label="Contact">
+        <%= apt.customerEmail %><br>
+        <%= apt.customerPhone %>
+      </td>
+
+      <td data-label="Barber">
+        <%= apt.barber ? apt.barber.name : 'No barber assigned' %>
+      </td>
+
+      <td data-label="Service"><%= apt.service %></td>
+
+      <td data-label="Date & Time">
+        <%= new Date(apt.date).toLocaleDateString() %><br>
+        <%= apt.time %>
+      </td>
+
+      <td data-label="Status">
+        <span class="status-badge status-<%= apt.status %>">
+          <%= apt.status %>
+        </span>
+      </td>
+
+      <td data-label="Actions">
+       <div class="action-buttons">
+  <% if (apt.status === 'pending') { %>
+    <form action="/admin/appointments/<%= apt._id %>/confirm" method="POST" style="display:inline;">
+      <button class="btn-action btn-confirm" title="Confirm">
+        <i class="fas fa-check"></i>
+      </button>
+    </form>
+  <% } %>
+
+  <% if (apt.status !== 'cancelled') { %>
+    <form action="/admin/appointments/<%= apt._id %>/cancel" method="POST" style="display:inline;">
+      <button class="btn-action btn-cancel" title="Cancel">
+        <i class="fas fa-times"></i>
+      </button>
+    </form>
+  <% } %>
+
+  <% if (apt.status === 'cancelled') { %>
+    <form action="/admin/appointments/<%= apt._id %>/delete" method="POST" style="display:inline;">
+      <button class="btn-action btn-delete" title="Delete Permanently" style="background:#e63946;color:white;">
+        <i class="fas fa-trash"></i>
+      </button>
+    </form>
+  <% } %>
+</div>
+
+      </td>
+    </tr>
+  <% }); %>
+</tbody>
+
+        </table>
+      </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section id="reviews" class="admin-section">
+      <h2>Customer Reviews</h2>
+      <div class="reviews-admin-grid">
+        <% reviews.forEach(review => { %>
+          <div class="review-admin-card">
+            <div class="review-admin-header">
+              <strong><%= review.customerName %></strong>
+              <div class="rating">
+                <% for(let i = 0; i < review.rating; i++) { %>
+                  <i class="fas fa-star"></i>
+                <% } %>
+              </div>
+            </div>
+            <p><%= review.comment %></p>
+            <div class="review-admin-actions">
+              <% if (!review.approved) { %>
+                <form action="/admin/reviews/<%= review._id %>/approve" method="POST" style="display:inline;">
+                  <button class="btn-action btn-confirm">Approve</button>
+                </form>
+              <% } else { %>
+                <span class="badge-approved">✓ Approved</span>
+              <% } %>
+              <form action="/admin/reviews/<%= review._id %>/delete" method="POST" style="display:inline;">
+                <button class="btn-action btn-cancel">Delete</button>
+              </form>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+
+    <!-- Barbers Section -->
+    <section id="barbers" class="admin-section">
+      <h2>Barbers</h2>
+      <div class="barbers-admin-grid">
+        <% barbers.forEach(barber => { %>
+          <div class="barber-admin-card">
+            <img src="<%= barber.image %>" alt="<%= barber.name %>">
+            <h3><%= barber.name %></h3>
+            <p><%= barber.specialty %></p>
+            <p><%= barber.experience %> years</p>
+            <span class="badge <%= barber.available ? 'badge-active' : 'badge-inactive' %>">
+              <%= barber.available ? 'Available' : 'Unavailable' %>
+            </span>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+  </main>
+</div>
+
+<%- include('../partials/footer') %>
