@@ -32,12 +32,12 @@ router.get('/', async (req, res) => {
 // POST /booking
 router.post('/', async (req, res) => {
   const { customerName, customerEmail, customerPhone, date, time, service, barber, notes } = req.body;
-  const barbers = await Barber.find().lean(); // always load for re-render
+  const barbers = await Barber.find().lean(); 
 
   const errors = [];
-  if (!customerName || !customerName.trim()) errors.push({ msg: 'Name is required' });
-  if (!customerEmail || !customerEmail.trim()) errors.push({ msg: 'Email is required' });
-  if (!customerPhone || !customerPhone.trim()) errors.push({ msg: 'Phone is required' });
+  if (!customerName) errors.push({ msg: 'Name is required' });
+  if (!customerEmail) errors.push({ msg: 'Email is required' });
+  if (!customerPhone) errors.push({ msg: 'Phone is required' });
   if (!date) errors.push({ msg: 'Date is required' });
   if (!time) errors.push({ msg: 'Time is required' });
   if (time && !isValidTimeSlot(time)) errors.push({ msg: 'Invalid time — choose a :00 or :30 slot' });
@@ -45,12 +45,11 @@ router.post('/', async (req, res) => {
   if (!barber) errors.push({ msg: 'Please select a barber' });
 
   if (errors.length > 0) {
-    // Render the form with errors and previously entered values
     return res.status(400).render('booking', {
       title: 'Book Appointment',
       barbers,
       errors,
-      oldInput: { customerName, customerEmail, customerPhone, date, time, service, barber, notes },
+      oldInput: req.body,
       success: req.flash('success'),
       error: req.flash('error')
     });
@@ -69,34 +68,35 @@ router.post('/', async (req, res) => {
       status: 'pending'
     });
 
-    // find barber for email content (if exists)
     const barberDoc = await Barber.findById(barber).lean();
 
-    // send confirmation email (wrap in try/catch so email failure doesn't block)
-    try {
-      await sendAppointmentConfirmation(appointment, barberDoc);
-    } catch (mailErr) {
-      console.error('Email send error (non-fatal):', mailErr);
-      // do not fail the whole request just because email failed
-    }
+    // SEND EMAIL IN BACKGROUND (non-blocking)
+   setImmediate(() => {
+  sendAppointmentConfirmation(appointment, barberDoc)
+    .catch(err => console.error("Email send error:", err));
+});
 
-   
-   return res.redirect('/booking/success');
+    // REDIRECT TO SUCCESS PAGE
+    return res.redirect('/booking/success');
+
   } catch (err) {
     console.error('POST /booking unexpected error:', err);
     return res.status(500).render('booking', {
       title: 'Book Appointment',
       barbers,
       errors: [{ msg: 'Unexpected server error — please try again later.' }],
-      oldInput: { customerName, customerEmail, customerPhone, date, time, service, barber, notes },
+      oldInput: req.body,
       success: req.flash('success'),
       error: req.flash('error')
     });
   }
 });
-router.get('/success', (req, res) => {
-  res.render('success', { title: "Booking Successful" });
-});
 
+// ADD THIS ROUTE — YOU WERE MISSING IT
+router.get('/success', (req, res) => {
+  res.render('success', {
+    title: "Booking Successful"
+  });
+});
 
 module.exports = router;
