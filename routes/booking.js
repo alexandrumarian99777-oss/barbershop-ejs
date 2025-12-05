@@ -80,8 +80,8 @@ router.post('/', async (req, res) => {
       // do not fail the whole request just because email failed
     }
 
-    req.flash('success', 'Appointment booked successfully! Check your email for confirmation.');
-    return res.redirect('/booking');
+   
+   return res.redirect('/booking/success');
   } catch (err) {
     console.error('POST /booking unexpected error:', err);
     return res.status(500).render('booking', {
@@ -94,5 +94,9 @@ router.post('/', async (req, res) => {
     });
   }
 });
+router.get('/success', (req, res) => {
+  res.render('success', { title: "Booking Successful" });
+});
+
 
 module.exports = router;
