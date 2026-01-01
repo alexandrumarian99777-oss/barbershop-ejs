@@ -5,32 +5,22 @@
   <div class="container">
     <h1 class="section-title">Book Your Appointment</h1>
 
-    <!-- Success Alert -->
     <% if (success && success.length > 0) { %>
-      <div class="alert alert-success">
-        <%= success %>
-      </div>
+      <div class="alert alert-success"><%= success %></div>
     <% } %>
 
-    <!-- Flash Error Alert -->
     <% if (error && error.length > 0) { %>
-      <div class="alert alert-error">
-        <%= error %>
-      </div>
+      <div class="alert alert-error"><%= error %></div>
     <% } %>
 
-    <!-- Validation Errors -->
     <% if (errors && errors.length > 0) { %>
       <div class="alert alert-error">
-        <% errors.forEach(error => { %>
-          <p><%= error.msg %></p>
-        <% }); %>
+        <% errors.forEach(e => { %><p><%= e.msg %></p><% }) %>
       </div>
     <% } %>
 
     <form action="/booking" method="POST" class="booking-form">
       <div class="form-grid">
-
         <div class="form-group">
           <label for="customerName">Full Name *</label>
           <input type="text" id="customerName" name="customerName" value="<%= oldInput.customerName || '' %>" required>
@@ -81,12 +71,8 @@
           <label for="time">Preferred Time *</label>
           <select name="time" id="time" required>
             <option value="">Select time</option>
-            <% 
-              const startHour = 9;
-              const endHour = 20;
-              for (let h = startHour; h <= endHour; h++) {
-                const hour = h.toString().padStart(2, '0');
-            %>
+            <% for(let h = 9; h <= 20; h++) { 
+                 const hour = h.toString().padStart(2,'0'); %>
               <option value="<%= hour %>:00"><%= hour %>:00</option>
               <option value="<%= hour %>:30"><%= hour %>:30</option>
             <% } %>
@@ -103,5 +89,41 @@
     </form>
   </div>
 </section>
+
+<script>
+const barberSelect = document.querySelector('select[name="barber"]');
+const dateInput = document.querySelector('input[name="date"]');
+const timeSelect = document.querySelector('#time');
+
+async function updateBookedTimes() {
+  const barberId = barberSelect.value;
+  const date = dateInput.value;
+  if (!barberId || !date) return;
+
+  try {
+    const res = await fetch(`/booking/booked-times/${barberId}/${date}`);
+    const data = await res.json();
+    const booked = data.times;
+
+    // Enable all first
+    Array.from(timeSelect.options).forEach(opt => opt.disabled = false);
+
+    // Disable booked slots
+    booked.forEach(t => {
+      const option = Array.from(timeSelect.options).find(opt => opt.value === t);
+      if (option) option.disabled = true;
+    });
+  } catch (err) {
+    console.error('Failed to fetch booked times:', err);
+  }
+}
+
+// Update when barber or date changes
+barberSelect.addEventListener('change', updateBookedTimes);
+dateInput.addEventListener('change', updateBookedTimes);
+
+// Update on page load if values exist
+window.addEventListener('DOMContentLoaded', updateBookedTimes);
+</script>
 
 <%- include('partials/footer') %>

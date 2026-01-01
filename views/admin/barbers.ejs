@@ -1,0 +1,29 @@
+<h1>Barbers</h1>
+
+<ul>
+  <% barbers.forEach(barber => { %>
+    <li style="margin-bottom:10px;">
+      <strong><%= barber.name %></strong> — <%= barber.specialty %>
+
+      <!-- CONFIRM -->
+      <form action="/admin/confirm-barber" method="POST" style="display:inline;">
+        <input type="hidden" name="barberId" value="<%= barber._id %>">
+        <button type="submit">Confirm</button>
+      </form>
+
+      <!-- DELETE -->
+      <form 
+        action="/admin/delete-barber/<%= barber._id %>" 
+        method="POST" 
+        style="display:inline;"
+        onsubmit="return confirm('Are you sure you want to delete this barber?');"
+      >
+        <button type="submit" style="color:red;">
+          Delete
+        </button>
+      </form>
+    </li>
+  <% }) %>
+</ul>
+
+<a href="/admin/add-barber">Add New Barber</a>

@@ -784,3 +784,57 @@ body {
 .btn-edit:hover {
   background: #0b7dda;
 }
+.barbers-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.barber-admin-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.barber-admin-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.btn-action.btn-delete {
+  padding: 8px;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.add-barber-form {
+  margin-top: 30px;
+  max-width: 600px;
+}
+
+.add-barber-form .form-group {
+  margin-bottom: 15px;
+}
+
+.add-barber-form input,
+.add-barber-form textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.add-barber-form button.btn-submit {
+  background: #2196f3;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}

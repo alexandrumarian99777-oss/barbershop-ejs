@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const barberSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
   specialty: {
     type: String,
@@ -14,17 +13,21 @@ const barberSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  image: {
+  workingHours: {
     type: String,
-    default: 'https://via.placeholder.com/300x400'
+    required: true
   },
   bio: {
     type: String,
     required: true
   },
+  image: {
+    type: String,
+    required: true
+  },
   available: {
     type: Boolean,
-    default: true
+    default: false
   }
 }, { timestamps: true });
 

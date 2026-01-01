@@ -174,23 +174,64 @@
     </section>
 
     <!-- Barbers Section -->
-    <section id="barbers" class="admin-section">
-      <h2>Barbers</h2>
-      <div class="barbers-admin-grid">
-        <% barbers.forEach(barber => { %>
-          <div class="barber-admin-card">
-            <img src="<%= barber.image %>" alt="<%= barber.name %>">
-            <h3><%= barber.name %></h3>
-            <p><%= barber.specialty %></p>
-            <p><%= barber.experience %> years</p>
-            <span class="badge <%= barber.available ? 'badge-active' : 'badge-inactive' %>">
-              <%= barber.available ? 'Available' : 'Unavailable' %>
-            </span>
-          </div>
-        <% }); %>
+<section id="barbers" class="admin-section">
+  <h2>Barbers</h2>
+  <div class="barbers-admin-grid">
+    <% barbers.forEach(barber => { %>
+      <div class="barber-admin-card">
+        <img src="<%= barber.image %>" alt="<%= barber.name %>">
+        <h3><%= barber.name %></h3>
+        <p><%= barber.specialty %></p>
+        <p><%= barber.experience %> years</p>
+        <span class="badge <%= barber.available ? 'badge-active' : 'badge-inactive' %>">
+          <%= barber.available ? 'Available' : 'Unavailable' %>
+        </span>
+        <form action="/admin/delete-barber/<%= barber._id %>" method="POST" style="margin-top: 10px;">
+          <button type="submit" class="btn-action btn-delete" style="background:#e63946; color:white; width:100%;">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </form>
       </div>
-    </section>
-  </main>
-</div>
+    <% }); %>
+  </div>
+</section>
+
+<!-- Add Barber Section -->
+<section class="admin-section">
+  <h2>Add Barber</h2>
+  <form action="/admin/add-barber" method="POST" enctype="multipart/form-data" class="add-barber-form">
+    <div class="form-group">
+      <label>Name:</label>
+      <input type="text" name="name" required>
+    </div>
+
+    <div class="form-group">
+      <label>Specialty:</label>
+      <input type="text" name="specialty" required>
+    </div>
+
+    <div class="form-group">
+      <label>Experience (years):</label>
+      <input type="number" name="experience" required>
+    </div>
+
+    <div class="form-group">
+      <label>Working Hours:</label>
+      <input type="text" name="workingHours" required>
+    </div>
+
+    <div class="form-group">
+      <label>Bio:</label>
+      <textarea name="bio" required></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Image:</label>
+      <input type="file" name="image" accept="image/*" required>
+    </div>
+
+    <button type="submit" class="btn-submit">Add Barber</button>
+  </form>
+</section>
 
 <%- include('../partials/footer') %>

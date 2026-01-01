@@ -4,8 +4,9 @@ const Admin = require('../models/Admin');
 const Appointment = require('../models/Appointment');
 const Review = require('../models/Review');
 const Barber = require('../models/Barber');
-const { isAuthenticated } = require('../middleware/auth');
+const { isAuthenticated } = require('../middlewares/auth');
 const { sendAppointmentConfirmation, sendAppointmentCancellation } = require('../utils/mailer');
+const upload = require('../middlewares/upload'); // Only declare once
 
 /* ===========================
    LOGIN
@@ -43,7 +44,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-
 /* ===========================
    DASHBOARD
 =========================== */
@@ -80,7 +80,6 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
   }
 });
 
-
 /* ===========================
    APPOINTMENT ACTIONS
 =========================== */
@@ -94,6 +93,12 @@ router.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
       { new: true }
     ).populate('barber');
 
+    if (!appointment) {
+      req.flash('error', 'Appointment not found');
+      return res.redirect('/admin/dashboard');
+    }
+
+    // Send confirmation email ONLY when admin confirms
     await sendAppointmentConfirmation(appointment, appointment.barber);
 
     req.flash('success', 'Appointment confirmed and email sent!');
@@ -106,13 +111,7 @@ router.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
   }
 });
 
-
-/*  
-  SINGLE correct Cancel Route 
-  + email 
-  + auto-delete after 5 seconds 
-*/
-
+// Cancel Appointment + auto-delete
 router.post('/appointments/:id/cancel', isAuthenticated, async (req, res) => {
   try {
     const appointment = await Appointment.findByIdAndUpdate(
@@ -123,7 +122,6 @@ router.post('/appointments/:id/cancel', isAuthenticated, async (req, res) => {
 
     await sendAppointmentCancellation(appointment, appointment.barber);
 
-    // DELAYED DELETE
     setTimeout(async () => {
       try {
         await Appointment.findByIdAndDelete(req.params.id);
@@ -143,14 +141,12 @@ router.post('/appointments/:id/cancel', isAuthenticated, async (req, res) => {
   }
 });
 
-
-// Manual Delete
+// Manual Delete Appointment
 router.post('/appointments/:id/delete', isAuthenticated, async (req, res) => {
   try {
     await Appointment.findByIdAndDelete(req.params.id);
     req.flash('success', 'Appointment deleted permanently.');
     res.redirect('/admin/dashboard');
-
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error deleting appointment');
@@ -158,12 +154,10 @@ router.post('/appointments/:id/delete', isAuthenticated, async (req, res) => {
   }
 });
 
-
 /* ===========================
    EDIT APPOINTMENT
 =========================== */
 
-// GET Edit Page
 router.get('/appointments/:id/edit', isAuthenticated, async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id).lean();
@@ -181,7 +175,6 @@ router.get('/appointments/:id/edit', isAuthenticated, async (req, res) => {
       success: req.flash('success'),
       error: req.flash('error')
     });
-
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error loading appointment');
@@ -189,7 +182,6 @@ router.get('/appointments/:id/edit', isAuthenticated, async (req, res) => {
   }
 });
 
-// POST Save Edit
 router.post('/appointments/:id/edit', isAuthenticated, async (req, res) => {
   const { customerName, customerEmail, customerPhone, barber, service, date, time, notes } = req.body;
 
@@ -207,14 +199,12 @@ router.post('/appointments/:id/edit', isAuthenticated, async (req, res) => {
 
     req.flash('success', 'Appointment updated successfully!');
     res.redirect('/admin/dashboard');
-
   } catch (error) {
     console.error(error);
     req.flash('error', 'Failed to update appointment');
     res.redirect(`/admin/appointments/${req.params.id}/edit`);
   }
 });
-
 
 /* ===========================
    REVIEWS
@@ -225,7 +215,6 @@ router.post('/reviews/:id/approve', isAuthenticated, async (req, res) => {
     await Review.findByIdAndUpdate(req.params.id, { approved: true });
     req.flash('success', 'Review approved!');
     res.redirect('/admin/dashboard');
-
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error approving review');
@@ -238,7 +227,6 @@ router.post('/reviews/:id/delete', isAuthenticated, async (req, res) => {
     await Review.findByIdAndDelete(req.params.id);
     req.flash('success', 'Review deleted!');
     res.redirect('/admin/dashboard');
-
   } catch (error) {
     console.error(error);
     req.flash('error', 'Error deleting review');
@@ -246,13 +234,89 @@ router.post('/reviews/:id/delete', isAuthenticated, async (req, res) => {
   }
 });
 
-
 /* ===========================
    LOGOUT
 =========================== */
+
 router.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/admin/login');
+});
+
+/* ===========================
+   BARBERS
+=========================== */
+
+// GET Add Barber page
+router.get('/add-barber', isAuthenticated, (req, res) => {
+  res.render('admin/add-barber', {
+    title: 'Add Barber',
+    success: req.flash('success'),
+    error: req.flash('error')
+  });
+});
+
+// POST Add Barber with image upload
+router.post('/add-barber', isAuthenticated, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      req.flash('error', 'Image is required.');
+      return res.redirect('/admin/add-barber');
+    }
+
+    const barber = new Barber({
+      name: req.body.name,
+      specialty: req.body.specialty,
+      experience: req.body.experience,
+      workingHours: req.body.workingHours,
+      bio: req.body.bio,
+      image: '/uploads/' + req.file.filename,
+      available: true
+    });
+
+    await barber.save();
+    req.flash('success', 'Barber added successfully!');
+    res.redirect('/admin/dashboard');
+
+  } catch (err) {
+    console.error('Add Barber Error:', err);
+    req.flash('error', 'Failed to add barber');
+    res.redirect('/admin/add-barber');
+  }
+});
+
+// DELETE Barber
+router.post('/delete-barber/:id', isAuthenticated, async (req, res) => {
+  try {
+    await Barber.findByIdAndDelete(req.params.id);
+    req.flash('success', 'Barber deleted!');
+    res.redirect('/admin/dashboard');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Error deleting barber');
+    res.redirect('/admin/dashboard');
+  }
+});
+// API to get booked times for a specific barber and date
+router.get('/booked-times/:barberId/:date', async (req, res) => {
+  try {
+    const { barberId, date } = req.params;
+
+    // Find all confirmed appointments for this barber and date
+    const appointments = await Appointment.find({
+      barber: barberId,
+      date,
+      status: 'confirmed'
+    });
+
+    // Map to array of times
+    const times = appointments.map(a => a.time);
+
+    res.json({ times }); // return array of booked times
+  } catch (err) {
+    console.error('Error fetching booked times:', err);
+    res.status(500).json({ times: [] });
+  }
 });
 
 module.exports = router;

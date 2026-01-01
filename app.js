@@ -52,6 +52,7 @@ app.use((req, res) => {
 //   console.error(err.stack);
 //   res.status(500).send('Something went wrong!');
 // });
+app.use(express.static('public'));
 
 // Replace with this:
 app.use((err, req, res, next) => {
@@ -76,6 +77,8 @@ app.use((err, req, res, next) => {
     });
   }
 });
+const adminRoutes = require('./routes/admin');
+app.use('/admin', adminRoutes);
 
 
 const PORT = process.env.PORT || 3000;
