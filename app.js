@@ -1,12 +1,10 @@
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
+const path = require('path');
 const session = require('express-session');
 const flash = require('connect-flash');
-const path = require('path');
 const connectDB = require('./config/database');
 
-// Import Routes
 const indexRouter = require('./routes/index');
 const bookingRouter = require('./routes/booking');
 const reviewsRouter = require('./routes/reviews');
@@ -31,7 +29,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  cookie: {
+    maxAge: 24*60*60*1000,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
 }));
 app.use(flash());
 
@@ -47,39 +50,18 @@ app.use((req, res) => {
 });
 
 // Error Handler
-// current:
-// app.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(500).send('Something went wrong!');
-// });
-app.use(express.static('public'));
-
-// Replace with this:
 app.use((err, req, res, next) => {
-  // Log full error to console (always)
   console.error('=== SERVER ERROR ===');
   console.error(err && err.stack ? err.stack : err);
 
-  // If environment is development, show stack in browser for debugging
   const isDev = (process.env.NODE_ENV || 'development') === 'development';
 
-  // If view exists, render a 500 page (create views/500.ejs if you haven't)
-  if (req.app.get('env') === 'development') {
-    res.status(500).render('500', {
-      message: err.message || 'Internal Server Error',
-      stack: err.stack || ''
-    });
-  } else {
-    // Production: show friendly message
-    res.status(500).render('500', {
-      message: 'Something went wrong. Our team has been notified.',
-      stack: ''
-    });
-  }
+  res.status(500).render('500', {
+    message: isDev ? err.message : 'Something went wrong. Our team has been notified.',
+    stack: isDev ? err.stack : '',
+    title: 'Error'
+  });
 });
-const adminRoutes = require('./routes/admin');
-app.use('/admin', adminRoutes);
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

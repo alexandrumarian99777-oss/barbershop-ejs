@@ -1,4 +1,4 @@
-<%- include('../partials/header') %>
+<%- include('../partials/header', { title: 'Admin Dashboard' }) %>
 
 <div class="admin-layout">
   <aside class="admin-sidebar">
@@ -21,10 +21,6 @@
     <% if (error && error.length > 0) { %>
       <div class="alert alert-error"><%= error %></div>
     <% } %>
-    <div class="admin-mobile-toggle" onclick="toggleAdminSidebar()">
-  ☰ Menu
-</div>
-
 
     <!-- Stats -->
     <div class="stats-grid">
@@ -66,77 +62,58 @@
               <th>Actions</th>
             </tr>
           </thead>
-         <tbody>
-  <% appointments.forEach(apt => { %>
-    <tr>
-      <td data-label="Customer"><%= apt.customerName %></td>
+          <tbody>
+            <% appointments.forEach(apt => { %>
+              <tr>
+                <td data-label="Customer"><%= apt.customerName %></td>
+                <td data-label="Contact">
+                  <%= apt.customerEmail %><br>
+                  <%= apt.customerPhone %>
+                </td>
+                <td data-label="Barber"><%= apt.barber ? apt.barber.name : 'No barber assigned' %></td>
+                <td data-label="Service"><%= apt.service %></td>
+                <td data-label="Date & Time">
+                  <%= new Date(apt.date).toLocaleDateString() %><br>
+                  <%= apt.time %>
+                </td>
+                <td data-label="Status">
+                  <span class="status-badge status-<%= apt.status %>"><%= apt.status %></span>
+                </td>
+                <td data-label="Actions">
+                  <div class="action-buttons">
+                    <!-- Edit -->
+                    <form action="/admin/appointments/<%= apt._id %>/edit" method="GET" style="display:inline;">
+                      <button class="btn-action btn-edit" style="background:#2196f3;color:white;"><i class="fas fa-edit"></i></button>
+                    </form>
 
-      <td data-label="Contact">
-        <%= apt.customerEmail %><br>
-        <%= apt.customerPhone %>
-      </td>
+                    <!-- Confirm -->
+                    <% if (apt.status === 'pending') { %>
+                      <form action="/admin/appointments/<%= apt._id %>/confirm" method="POST" style="display:inline;">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn-action btn-confirm"><i class="fas fa-check"></i></button>
+                      </form>
+                    <% } %>
 
-      <td data-label="Barber">
-        <%= apt.barber ? apt.barber.name : 'No barber assigned' %>
-      </td>
+                    <!-- Cancel -->
+                    <% if (apt.status !== 'cancelled') { %>
+                      <form action="/admin/appointments/<%= apt._id %>/cancel" method="POST" style="display:inline;">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn-action btn-cancel"><i class="fas fa-times"></i></button>
+                      </form>
+                    <% } %>
 
-      <td data-label="Service"><%= apt.service %></td>
-
-      <td data-label="Date & Time">
-        <%= new Date(apt.date).toLocaleDateString() %><br>
-        <%= apt.time %>
-      </td>
-
-      <td data-label="Status">
-        <span class="status-badge status-<%= apt.status %>">
-          <%= apt.status %>
-        </span>
-      </td>
-
-      <td data-label="Actions">
-  <div class="action-buttons">
-
-    <!-- EDIT BUTTON (always visible) -->
-    <form action="/admin/appointments/<%= apt._id %>/edit" method="GET" style="display:inline;">
-      <button class="btn-action btn-edit" title="Edit" style="background:#2196f3;color:white;">
-        <i class="fas fa-edit"></i>
-      </button>
-    </form>
-
-    <!-- CONFIRM BUTTON -->
-    <% if (apt.status === 'pending') { %>
-      <form action="/admin/appointments/<%= apt._id %>/confirm" method="POST" style="display:inline;">
-        <button class="btn-action btn-confirm" title="Confirm">
-          <i class="fas fa-check"></i>
-        </button>
-      </form>
-    <% } %>
-
-    <!-- CANCEL BUTTON -->
-    <% if (apt.status !== 'cancelled') { %>
-      <form action="/admin/appointments/<%= apt._id %>/cancel" method="POST" style="display:inline;">
-        <button class="btn-action btn-cancel" title="Cancel">
-          <i class="fas fa-times"></i>
-        </button>
-      </form>
-    <% } %>
-
-    <!-- DELETE BUTTON -->
-    <% if (apt.status === 'cancelled') { %>
-      <form action="/admin/appointments/<%= apt._id %>/delete" method="POST" style="display:inline;">
-        <button class="btn-action btn-delete" title="Delete Permanently" style="background:#e63946;color:white;">
-          <i class="fas fa-trash"></i>
-        </button>
-      </form>
-    <% } %>
-
-  </div>
-</td>
-
-    </tr>
-  <% }); %>
-</tbody>
-
+                    <!-- Delete -->
+                    <% if (apt.status === 'cancelled') { %>
+                      <form action="/admin/appointments/<%= apt._id %>/delete" method="POST" style="display:inline;">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn-action btn-delete" style="background:#e63946;color:white;"><i class="fas fa-trash"></i></button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
         </table>
       </div>
     </section>
@@ -150,7 +127,7 @@
             <div class="review-admin-header">
               <strong><%= review.customerName %></strong>
               <div class="rating">
-                <% for(let i = 0; i < review.rating; i++) { %>
+                <% for(let i=0;i<review.rating;i++){ %>
                   <i class="fas fa-star"></i>
                 <% } %>
               </div>
@@ -159,12 +136,14 @@
             <div class="review-admin-actions">
               <% if (!review.approved) { %>
                 <form action="/admin/reviews/<%= review._id %>/approve" method="POST" style="display:inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button class="btn-action btn-confirm">Approve</button>
                 </form>
               <% } else { %>
                 <span class="badge-approved">✓ Approved</span>
               <% } %>
               <form action="/admin/reviews/<%= review._id %>/delete" method="POST" style="display:inline;">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button class="btn-action btn-cancel">Delete</button>
               </form>
             </div>
@@ -174,64 +153,70 @@
     </section>
 
     <!-- Barbers Section -->
-<section id="barbers" class="admin-section">
-  <h2>Barbers</h2>
-  <div class="barbers-admin-grid">
-    <% barbers.forEach(barber => { %>
-      <div class="barber-admin-card">
-        <img src="<%= barber.image %>" alt="<%= barber.name %>">
-        <h3><%= barber.name %></h3>
-        <p><%= barber.specialty %></p>
-        <p><%= barber.experience %> years</p>
-        <span class="badge <%= barber.available ? 'badge-active' : 'badge-inactive' %>">
-          <%= barber.available ? 'Available' : 'Unavailable' %>
-        </span>
-        <form action="/admin/delete-barber/<%= barber._id %>" method="POST" style="margin-top: 10px;">
-          <button type="submit" class="btn-action btn-delete" style="background:#e63946; color:white; width:100%;">
-            <i class="fas fa-trash"></i> Delete
-          </button>
-        </form>
+    <section id="barbers" class="admin-section">
+      <h2>Barbers</h2>
+      <div class="barbers-admin-grid">
+        <% barbers.forEach(barber => { %>
+          <div class="barber-admin-card">
+            <img src="<%= barber.image %>" alt="<%= barber.name %>">
+            <h3><%= barber.name %></h3>
+            <p><%= barber.specialty %></p>
+            <p><%= barber.experience %> years</p>
+            <span class="badge <%= barber.available ? 'badge-active' : 'badge-inactive' %>">
+              <%= barber.available ? 'Available' : 'Unavailable' %>
+            </span>
+            <form action="/admin/delete-barber/<%= barber._id %>" method="POST" style="margin-top: 10px;">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button type="submit" class="btn-action btn-delete" style="background:#e63946; color:white; width:100%;">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </form>
+          </div>
+        <% }); %>
       </div>
-    <% }); %>
-  </div>
-</section>
+    </section>
 
-<!-- Add Barber Section -->
-<section class="admin-section">
-  <h2>Add Barber</h2>
-  <form action="/admin/add-barber" method="POST" enctype="multipart/form-data" class="add-barber-form">
-    <div class="form-group">
-      <label>Name:</label>
-      <input type="text" name="name" required>
-    </div>
+    <!-- Add Barber Section -->
+    <section class="admin-section">
+      <h2>Add Barber</h2>
+      <form action="/admin/add-barber" method="POST" enctype="multipart/form-data" class="add-barber-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-    <div class="form-group">
-      <label>Specialty:</label>
-      <input type="text" name="specialty" required>
-    </div>
+        <div class="form-group">
+          <label>Name:</label>
+          <input type="text" name="name" required>
+        </div>
 
-    <div class="form-group">
-      <label>Experience (years):</label>
-      <input type="number" name="experience" required>
-    </div>
+        <div class="form-group">
+          <label>Specialty:</label>
+          <input type="text" name="specialty" required>
+        </div>
 
-    <div class="form-group">
-      <label>Working Hours:</label>
-      <input type="text" name="workingHours" required>
-    </div>
+        <div class="form-group">
+          <label>Experience (years):</label>
+          <input type="number" name="experience" required>
+        </div>
 
-    <div class="form-group">
-      <label>Bio:</label>
-      <textarea name="bio" required></textarea>
-    </div>
+        <div class="form-group">
+          <label>Working Hours:</label>
+          <input type="text" name="workingHours" required>
+        </div>
 
-    <div class="form-group">
-      <label>Image:</label>
-      <input type="file" name="image" accept="image/*" required>
-    </div>
+        <div class="form-group">
+          <label>Bio:</label>
+          <textarea name="bio" required></textarea>
+        </div>
 
-    <button type="submit" class="btn-submit">Add Barber</button>
-  </form>
-</section>
+        <div class="form-group">
+          <label>Image:</label>
+          <input type="file" name="image" accept="image/*" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Add Barber</button>
+      </form>
+    </section>
+
+  </main>
+</div>
 
 <%- include('../partials/footer') %>
