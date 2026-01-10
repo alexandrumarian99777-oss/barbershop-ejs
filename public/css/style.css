@@ -118,7 +118,6 @@ body {
 
 .btn-hero:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
 }
 
 /* Sections */
