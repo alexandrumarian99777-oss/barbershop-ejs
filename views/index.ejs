@@ -73,7 +73,7 @@
     <div class="barbers-grid">
       <% barbers.forEach(barber => { %>
         <div class="barber-card">
-          <img src="<%= barber.image %>" alt="<%= barber.name %>">
+          <img src="/uploads/barbers/<%= barber.image %>" alt="<%= barber.name %>" onerror="this.src='/uploads/barbers/default.jpg'">
           <div class="barber-info">
             <h3><%= barber.name %></h3>
             <p class="specialty"><%= barber.specialty %></p>

@@ -158,7 +158,8 @@
       <div class="barbers-admin-grid">
         <% barbers.forEach(barber => { %>
           <div class="barber-admin-card">
-            <img src="<%= barber.image %>" alt="<%= barber.name %>">
+                      <img src="/uploads/barbers/<%= barber.image %>" alt="<%= barber.name %>" onerror="this.src='/uploads/barbers/default.jpg'">
+
             <h3><%= barber.name %></h3>
             <p><%= barber.specialty %></p>
             <p><%= barber.experience %> years</p>
@@ -180,40 +181,41 @@
     <section class="admin-section">
       <h2>Add Barber</h2>
       <form action="/admin/add-barber" method="POST" enctype="multipart/form-data" class="add-barber-form">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-        <div class="form-group">
-          <label>Name:</label>
-          <input type="text" name="name" required>
-        </div>
+  <div class="form-group">
+    <label>Name:</label>
+    <input type="text" name="name" required>
+  </div>
 
-        <div class="form-group">
-          <label>Specialty:</label>
-          <input type="text" name="specialty" required>
-        </div>
+  <div class="form-group">
+    <label>Specialty:</label>
+    <input type="text" name="specialty" required>
+  </div>
 
-        <div class="form-group">
-          <label>Experience (years):</label>
-          <input type="number" name="experience" required>
-        </div>
+  <div class="form-group">
+    <label>Experience (years):</label>
+    <input type="number" name="experience" required>
+  </div>
 
-        <div class="form-group">
-          <label>Working Hours:</label>
-          <input type="text" name="workingHours" required>
-        </div>
+  <div class="form-group">
+    <label>Working Hours:</label>
+    <input type="text" name="workingHours" required>
+  </div>
 
-        <div class="form-group">
-          <label>Bio:</label>
-          <textarea name="bio" required></textarea>
-        </div>
+  <div class="form-group">
+    <label>Bio:</label>
+    <textarea name="bio" required></textarea>
+  </div>
 
-        <div class="form-group">
-          <label>Image:</label>
-          <input type="file" name="image" accept="image/*" required>
-        </div>
+  <div class="form-group">
+    <label>Image:</label>
+    <input type="file" name="image" accept="image/*" required>
+  </div>
 
-        <button type="submit" class="btn-submit">Add Barber</button>
-      </form>
+  <button type="submit" class="btn-submit">Add Barber</button>
+</form>
+
     </section>
 
   </main>

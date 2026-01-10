@@ -1,23 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const Barber = require('../models/Barber');
-const Review = require('../models/Review');
+const Review = require('../models/review'); // make sure case matches your file
 
 router.get('/', async (req, res) => {
   try {
-    const barbers = await Barber.find({ available: true }).limit(3);
-    const reviews = await Review.find({ approved: true }).sort('-createdAt').limit(6);
-    
+    // Fetch all barbers and approved reviews
+    const [barbers, reviews] = await Promise.all([
+      Barber.find(),                   // or Barber.find({ available: true }) if you want only active barbers
+      Review.find({ approved: true })  // only approved reviews
+    ]);
+
     res.render('index', {
-      title: 'Classic Cuts Barbershop',
+      title: 'Classic Cuts Barbershop', // or 'Home'
       barbers,
       reviews,
       success: req.flash('success'),
       error: req.flash('error')
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Server Error');
+  } catch (err) {
+    console.error('Error fetching homepage data:', err);
+    res.status(500).send('Server error');
   }
 });
 

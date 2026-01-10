@@ -6,7 +6,7 @@ const path = require('path');
 const csrf = require('csurf');
 
 const Admin = require('../models/admin');
-const Barber = require('../models/barber');
+const Barber = require('../models/Barber'); // make sure case matches your file
 const Appointment = require('../models/appointment');
 const Review = require('../models/review');
 
@@ -15,7 +15,7 @@ const csrfProtection = csrf({ cookie: false });
 // Multer config for barber images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'public/uploads/barbers/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
 
@@ -26,7 +26,7 @@ function isAdmin(req, res, next) {
   res.redirect('/admin/login');
 }
 
-// ====== LOGIN ======
+// ===== LOGIN =====
 router.get('/login', csrfProtection, (req, res) => {
   res.render('admin/login', {
     csrfToken: req.csrfToken(),
@@ -46,12 +46,12 @@ router.post('/login', csrfProtection, async (req, res) => {
   res.redirect('/admin/dashboard');
 });
 
-// ====== LOGOUT ======
+// ===== LOGOUT =====
 router.get('/logout', isAdmin, (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
 });
 
-// ====== DASHBOARD ======
+// ===== DASHBOARD =====
 router.get('/dashboard', isAdmin, csrfProtection, async (req, res) => {
   const [appointments, reviews, barbers] = await Promise.all([
     Appointment.find().populate('barber'),
@@ -78,7 +78,60 @@ router.get('/dashboard', isAdmin, csrfProtection, async (req, res) => {
   });
 });
 
-// ====== APPOINTMENTS ======
+// ===== ADD BARBER =====
+// ===== ADD BARBER =====
+router.post('/add-barber', isAdmin, upload.single('image'), async (req, res) => {
+  try {
+    console.log('Form submission:', req.body, req.file); // Debug
+
+    const { name, specialty, experience, bio, workingHours } = req.body;
+
+    if (!name) {
+      req.flash('error', 'Name is required');
+      return res.redirect('/admin/dashboard');
+    }
+
+    // Ensure the uploads folder exists
+    const fs = require('fs');
+    const uploadPath = 'public/uploads/barbers';
+    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+
+    const newBarber = new Barber({
+      name,
+      specialty: specialty || '',
+      experience: experience ? Number(experience) : 0,
+      bio: bio || '',
+      workingHours: workingHours || '',
+      image: req.file?.filename || 'default.jpg' // fallback image
+    });
+
+    await newBarber.save();
+    req.flash('success', 'Barber added successfully');
+    res.redirect('/admin/dashboard');
+
+  } catch (err) {
+    console.error('💥 Barber creation error:', err);
+
+    // Check for old MongoDB unique index issue (optional)
+    if (err.code === 11000) {
+      req.flash('error', 'Duplicate field error. Likely an old index in the database.');
+    } else {
+      req.flash('error', 'Something went wrong while adding the barber.');
+    }
+
+    res.redirect('/admin/dashboard');
+  }
+});
+
+
+// ===== DELETE BARBER =====
+router.post('/delete-barber/:id', isAdmin, csrfProtection, async (req, res) => {
+  await Barber.findByIdAndDelete(req.params.id);
+  req.flash('success', 'Barber deleted successfully');
+  res.redirect('/admin/dashboard');
+});
+
+// ===== APPOINTMENTS =====
 router.post('/appointments/:id/confirm', isAdmin, csrfProtection, async (req, res) => {
   await Appointment.findByIdAndUpdate(req.params.id, { status: 'confirmed' });
   req.flash('success', 'Appointment confirmed');
@@ -97,7 +150,7 @@ router.post('/appointments/:id/delete', isAdmin, csrfProtection, async (req, res
   res.redirect('/admin/dashboard');
 });
 
-// ====== REVIEWS ======
+// ===== REVIEWS =====
 router.post('/reviews/:id/approve', isAdmin, csrfProtection, async (req, res) => {
   await Review.findByIdAndUpdate(req.params.id, { approved: true });
   req.flash('success', 'Review approved');
@@ -107,43 +160,6 @@ router.post('/reviews/:id/approve', isAdmin, csrfProtection, async (req, res) =>
 router.post('/reviews/:id/delete', isAdmin, csrfProtection, async (req, res) => {
   await Review.findByIdAndDelete(req.params.id);
   req.flash('success', 'Review deleted');
-  res.redirect('/admin/dashboard');
-});
-
-// ====== BARBERS ======
-router.post('/add-barber', isAdmin, upload.single('image'), csrfProtection, async (req, res) => {
-  try {
-      if (!req.file) {
-          req.flash('error', 'Please upload a valid image');
-          return res.redirect('/admin/dashboard');
-      }
-
-      const { name, specialty, experience, workingHours, bio } = req.body;
-      const barber = new Barber({
-          name,
-          specialty,
-          experience,
-          workingHours,
-          bio,
-          image: '/uploads/barbers/' + req.file.filename
-      });
-
-      await barber.save();
-      req.flash('success', 'Barber added successfully');
-      res.redirect('/admin/dashboard');
-
-  } catch (err) {
-      console.error(err);
-      req.flash('error', 'Something went wrong while adding the barber');
-      res.redirect('/admin/dashboard');
-  }
-});
-
-
-
-router.post('/delete-barber/:id', isAdmin, csrfProtection, async (req, res) => {
-  await Barber.findByIdAndDelete(req.params.id);
-  req.flash('success', 'Barber deleted successfully');
   res.redirect('/admin/dashboard');
 });
 
