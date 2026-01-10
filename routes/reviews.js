@@ -1,31 +1,47 @@
-const express = require('express');
+import express from 'express';
+import Review from '../models/Review.js';
+
 const router = express.Router();
-const { body, validationResult } = require('express-validator');
-const Review = require('../models/Review');
 
-router.post('/', [
-  body('customerName').trim().notEmpty().withMessage('Name is required'),
-  body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
-  body('comment').trim().notEmpty().withMessage('Comment is required')
-], async (req, res) => {
-  const errors = validationResult(req);
-  
-  if (!errors.isEmpty()) {
-    req.flash('error', 'Please fill all fields correctly');
-    return res.redirect('/#reviews');
-  }
-
+// GET all reviews (for homepage or admin can filter approved)
+router.get('/', async (req, res) => {
   try {
-    const review = new Review(req.body);
-    await review.save();
-
-    req.flash('success', 'Thank you for your review! It will be published after approval.');
-    res.redirect('/#reviews');
-  } catch (error) {
-    console.error(error);
-    req.flash('error', 'Error submitting review. Please try again.');
-    res.redirect('/#reviews');
+    const reviews = await Review.find({ approved: true }).lean();
+    res.render('reviews', {
+      title: 'Customer Reviews',
+      reviews,
+      success: req.flash('success'),
+      error: req.flash('error')
+    });
+  } catch (err) {
+    console.error('Error fetching reviews:', err);
+    res.status(500).send('Server error');
   }
 });
 
-module.exports = router;
+// Optional: POST route to submit a review
+router.post('/', async (req, res) => {
+  try {
+    const { customerName, comment, rating } = req.body;
+    if (!customerName || !comment || !rating) {
+      req.flash('error', 'All fields are required');
+      return res.redirect('/reviews');
+    }
+
+    await Review.create({
+      customerName,
+      comment,
+      rating: Number(rating),
+      approved: false
+    });
+
+    req.flash('success', 'Review submitted for approval');
+    res.redirect('/reviews');
+  } catch (err) {
+    console.error('Error submitting review:', err);
+    req.flash('error', 'Something went wrong');
+    res.redirect('/reviews');
+  }
+});
+
+export default router;

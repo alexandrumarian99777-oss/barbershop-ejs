@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const appointmentSchema = new mongoose.Schema({
   customerName: { type: String, required: true },
@@ -11,5 +11,5 @@ const appointmentSchema = new mongoose.Schema({
   status: { type: String, default: 'pending' }
 }, { timestamps: true });
 
-// ✅ Prevent OverwriteModelError
-module.exports = mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema);
+const Appointment = mongoose.models.Appointment || mongoose.model('Appointment', appointmentSchema);
+export default Appointment;

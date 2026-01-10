@@ -170,11 +170,6 @@ body {
 }
 
 /* Barbers Grid */
-.barbers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-}
 
 .barber-card {
   background: white;
@@ -214,7 +209,8 @@ body {
   font-size: 0.9rem;
 }
 .barbers-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   flex-wrap: wrap;
   gap: 20px;
 }
@@ -618,6 +614,12 @@ body {
   .table-responsive {
     overflow-x: auto;
   }
+  .barbers-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  flex-wrap: wrap;
+  gap: 20px;
+}
   /* ================================
    ADMIN DASHBOARD RESPONSIVE DESIGN
    ================================ */

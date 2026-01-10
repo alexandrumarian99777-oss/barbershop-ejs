@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "Professional barbershop booking system",
   "main": "app.js",
+  "type": "module",
+  
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
+  
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "connect-flash": "^0.1.1",

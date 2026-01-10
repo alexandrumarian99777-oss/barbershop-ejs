@@ -1,20 +1,26 @@
-const express = require('express');
+// routes/admin.js
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import multer from 'multer';
+import path from 'path';
+import csrf from 'csurf';
+import fs from 'fs';
+
+import Admin from '../models/Admin.js';
+import Barber from '../models/Barber.js';
+import Appointment from '../models/Appointment.js';
+import Review from '../models/Review.js';
+
 const router = express.Router();
-const bcrypt = require('bcryptjs');
-const multer = require('multer');
-const path = require('path');
-const csrf = require('csurf');
-
-const Admin = require('../models/admin');
-const Barber = require('../models/Barber'); // make sure case matches your file
-const Appointment = require('../models/appointment');
-const Review = require('../models/review');
-
 const csrfProtection = csrf({ cookie: false });
 
 // Multer config for barber images
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'public/uploads/barbers/'),
+  destination: (req, file, cb) => {
+    const uploadPath = 'public/uploads/barbers';
+    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
@@ -53,11 +59,20 @@ router.get('/logout', isAdmin, (req, res) => {
 
 // ===== DASHBOARD =====
 router.get('/dashboard', isAdmin, csrfProtection, async (req, res) => {
-  const [appointments, reviews, barbers] = await Promise.all([
-    Appointment.find().populate('barber'),
+  const [reviews, barbers] = await Promise.all([
     Review.find(),
     Barber.find()
   ]);
+
+  let appointments;
+
+  if (req.session.barberId) {
+    // Barber login: show only their appointments
+    appointments = await Appointment.find({ barber: req.session.barberId }).populate('barber');
+  } else {
+    // Admin login: show all
+    appointments = await Appointment.find().populate('barber');
+  }
 
   const stats = {
     pending: appointments.filter(a => a.status === 'pending').length,
@@ -78,12 +93,10 @@ router.get('/dashboard', isAdmin, csrfProtection, async (req, res) => {
   });
 });
 
-// ===== ADD BARBER =====
+
 // ===== ADD BARBER =====
 router.post('/add-barber', isAdmin, upload.single('image'), async (req, res) => {
   try {
-    console.log('Form submission:', req.body, req.file); // Debug
-
     const { name, specialty, experience, bio, workingHours } = req.body;
 
     if (!name) {
@@ -91,38 +104,24 @@ router.post('/add-barber', isAdmin, upload.single('image'), async (req, res) => 
       return res.redirect('/admin/dashboard');
     }
 
-    // Ensure the uploads folder exists
-    const fs = require('fs');
-    const uploadPath = 'public/uploads/barbers';
-    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
-
     const newBarber = new Barber({
       name,
       specialty: specialty || '',
       experience: experience ? Number(experience) : 0,
       bio: bio || '',
       workingHours: workingHours || '',
-      image: req.file?.filename || 'default.jpg' // fallback image
+      image: req.file?.filename || 'default.jpg'
     });
 
     await newBarber.save();
     req.flash('success', 'Barber added successfully');
     res.redirect('/admin/dashboard');
-
   } catch (err) {
     console.error('💥 Barber creation error:', err);
-
-    // Check for old MongoDB unique index issue (optional)
-    if (err.code === 11000) {
-      req.flash('error', 'Duplicate field error. Likely an old index in the database.');
-    } else {
-      req.flash('error', 'Something went wrong while adding the barber.');
-    }
-
+    req.flash('error', 'Something went wrong while adding the barber.');
     res.redirect('/admin/dashboard');
   }
 });
-
 
 // ===== DELETE BARBER =====
 router.post('/delete-barber/:id', isAdmin, csrfProtection, async (req, res) => {
@@ -163,4 +162,4 @@ router.post('/reviews/:id/delete', isAdmin, csrfProtection, async (req, res) => 
   res.redirect('/admin/dashboard');
 });
 
-module.exports = router;
+export default router;

@@ -1,16 +1,24 @@
-require('dotenv').config();
-const express = require('express');
-const path = require('path');
-const session = require('express-session');
-const flash = require('connect-flash');
-const connectDB = require('./config/database');
+// app.js
+import 'dotenv/config';
+import express from 'express';
+import path from 'path';
+import session from 'express-session';
+import flash from 'connect-flash';
+import { fileURLToPath } from 'url';
+import connectDB from './config/database.js';
 
-const indexRouter = require('./routes/index');
-const bookingRouter = require('./routes/booking');
-const reviewsRouter = require('./routes/reviews');
-const adminRouter = require('./routes/admin');
+// Import routes (ESM)
+import indexRouter from './routes/index.js';
+import bookingRouter from './routes/booking.js';
+import reviewsRouter from './routes/reviews.js';
+import adminRouter from './routes/admin.js';
+import barberRouter from './routes/barber.js';
 
 const app = express();
+
+// __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Connect to Database
 connectDB();
@@ -43,6 +51,7 @@ app.use('/', indexRouter);
 app.use('/booking', bookingRouter);
 app.use('/reviews', reviewsRouter);
 app.use('/admin', adminRouter);
+app.use('/barber', barberRouter);
 
 // 404 Handler
 app.use((req, res) => {

@@ -1,14 +1,15 @@
-// models/Barber.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const barberSchema = new mongoose.Schema({
   name: { type: String, required: true },
   specialty: { type: String },
-  experience: { type: Number },
+  experience: { type: Number, default: 0 },
   bio: { type: String },
-  image: { type: String },
-  workingHours: { type: String } // if you want to keep this
-});
+  workingHours: { type: String },
+  available: { type: Boolean, default: true },
+  image: { type: String, default: 'default.jpg' }
+}, { timestamps: true });
 
-// ✅ Avoid OverwriteModelError
-module.exports = mongoose.models.Barber || mongoose.model('Barber', barberSchema);
+const Barber = mongoose.models.Barber || mongoose.model('Barber', barberSchema);
+
+export default Barber;

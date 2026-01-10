@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const Barber = require('../models/Barber');
-const Review = require('../models/review'); // make sure case matches your file
+
+import Barber from '../models/Barber.js';
+import Review from '../models/Review.js'; // make sure the filename matches exactly
 
 router.get('/', async (req, res) => {
   try {
@@ -24,4 +25,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

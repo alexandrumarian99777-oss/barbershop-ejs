@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= title %></title>
+</head>
+<body>
+  <h1>Barber Dashboard</h1>
+  <a href="/barber/logout">Logout</a>
+
+  <h2>Your Appointments</h2>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Customer</th>
+        <th>Service</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% appointments.forEach(a => { %>
+        <tr>
+          <td><%= a.customerName %></td>
+          <td><%= a.service %></td>
+          <td><%= new Date(a.date).toLocaleDateString() %></td>
+          <td><%= a.time %></td>
+          <td><%= a.status %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>

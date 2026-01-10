@@ -1,7 +1,10 @@
-const express = require('express');
+// routes/booking.js
+import express from 'express';
+import Appointment from '../models/Appointment.js';
+import Barber from '../models/Barber.js';
+import flash from 'connect-flash';
+
 const router = express.Router();
-const Appointment = require('../models/Appointment');
-const Barber = require('../models/Barber');
 
 // Allowed time slots (00 and 30 minutes only)
 function isValidTimeSlot(time) {
@@ -23,7 +26,10 @@ router.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error('GET /booking error:', err);
-    res.status(500).render('500', { message: 'Server error loading booking page', stack: err.stack });
+    res.status(500).render('500', {
+      message: 'Server error loading booking page',
+      stack: err.stack
+    });
   }
 });
 
@@ -42,7 +48,6 @@ router.post('/', async (req, res) => {
   if (!service) errors.push({ msg: 'Service is required' });
   if (!barber) errors.push({ msg: 'Please select a barber' });
 
-  // Check if slot is already booked (confirmed appointments only)
   const existing = await Appointment.findOne({
     barber,
     date,
@@ -97,7 +102,6 @@ router.get('/booked-times/:barberId/:date', async (req, res) => {
   try {
     const { barberId, date } = req.params;
 
-    // Only confirmed appointments block the slot
     const appointments = await Appointment.find({
       barber: barberId,
       date,
@@ -117,4 +121,4 @@ router.get('/success', (req, res) => {
   res.render('success', { title: 'Booking Successful' });
 });
 
-module.exports = router;
+export default router;
