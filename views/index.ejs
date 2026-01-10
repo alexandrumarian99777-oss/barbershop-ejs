@@ -76,15 +76,25 @@
           <img src="/uploads/barbers/<%= barber.image %>" alt="<%= barber.name %>" onerror="this.src='/uploads/barbers/default.jpg'">
           <div class="barber-info">
             <h3><%= barber.name %></h3>
-            <p class="specialty"><%= barber.specialty %></p>
-            <p class="experience"><%= barber.experience %> years experience</p>
-            <p class="bio"><%= barber.bio %></p>
+
+            <% if (barber.specialty) { %>
+              <p class="specialty"><%= barber.specialty %></p>
+            <% } %>
+
+            <% if (barber.experience) { %>
+              <p class="experience"><%= barber.experience %> years experience</p>
+            <% } %>
+
+            <% if (barber.bio) { %>
+              <p class="bio"><%= barber.bio %></p>
+            <% } %>
           </div>
         </div>
       <% }); %>
     </div>
   </div>
 </section>
+
 
 <!-- Reviews Section -->
 <section class="section" id="reviews">
