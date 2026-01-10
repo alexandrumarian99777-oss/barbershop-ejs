@@ -112,15 +112,34 @@ router.post('/reviews/:id/delete', isAdmin, csrfProtection, async (req, res) => 
 
 // ====== BARBERS ======
 router.post('/add-barber', isAdmin, upload.single('image'), csrfProtection, async (req, res) => {
-  const { name, specialty, experience, workingHours, bio } = req.body;
-  const barber = new Barber({
-    name, specialty, experience, workingHours, bio,
-    image: req.file ? '/uploads/barbers/' + req.file.filename : ''
-  });
-  await barber.save();
-  req.flash('success', 'Barber added successfully');
-  res.redirect('/admin/dashboard');
+  try {
+      if (!req.file) {
+          req.flash('error', 'Please upload a valid image');
+          return res.redirect('/admin/dashboard');
+      }
+
+      const { name, specialty, experience, workingHours, bio } = req.body;
+      const barber = new Barber({
+          name,
+          specialty,
+          experience,
+          workingHours,
+          bio,
+          image: '/uploads/barbers/' + req.file.filename
+      });
+
+      await barber.save();
+      req.flash('success', 'Barber added successfully');
+      res.redirect('/admin/dashboard');
+
+  } catch (err) {
+      console.error(err);
+      req.flash('error', 'Something went wrong while adding the barber');
+      res.redirect('/admin/dashboard');
+  }
 });
+
+
 
 router.post('/delete-barber/:id', isAdmin, csrfProtection, async (req, res) => {
   await Barber.findByIdAndDelete(req.params.id);

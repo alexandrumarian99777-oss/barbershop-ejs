@@ -1,16 +1,25 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Storage config
+// Folder path
+const uploadPath = path.join(__dirname, '../public/uploads/barbers');
+
+// Create folder if it doesn't exist
+if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+}
+
+// Multer storage
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/uploads'); // make sure this folder exists
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
+    destination: (req, file, cb) => cb(null, uploadPath),
+    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 
-const upload = multer({ storage });
+// Only accept images
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files allowed'));
+};
 
-module.exports = upload;
+module.exports = multer({ storage, fileFilter });
