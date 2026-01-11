@@ -98,7 +98,6 @@ router.get('/dashboard', isAdmin, csrfProtection, async (req, res) => {
 router.post('/add-barber', isAdmin, upload.single('image'), async (req, res) => {
   try {
     const { name, specialty, experience, bio, workingHours } = req.body;
-
     if (!name) {
       req.flash('error', 'Name is required');
       return res.redirect('/admin/dashboard');
@@ -122,6 +121,7 @@ router.post('/add-barber', isAdmin, upload.single('image'), async (req, res) => 
     res.redirect('/admin/dashboard');
   }
 });
+
 
 // ===== DELETE BARBER =====
 router.post('/delete-barber/:id', isAdmin, csrfProtection, async (req, res) => {
